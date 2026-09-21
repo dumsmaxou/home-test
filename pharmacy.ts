@@ -7,6 +7,9 @@ export class Drug {
     this.expiresIn = expiresIn;
     this.benefit = benefit;
   }
+  hasExpired(): boolean {
+    return this.expiresIn < 0
+  }
 }
 
 export class Pharmacy {
@@ -14,57 +17,75 @@ export class Pharmacy {
   constructor(drugs: Drug[] = []) {
     this.drugs = drugs;
   }
-  updateBenefitValue() {
-    for (var i = 0; i < this.drugs.length; i++) {
-      if (
-        this.drugs[i].name != "Herbal Tea" &&
-        this.drugs[i].name != "Fervex"
-      ) {
-        if (this.drugs[i].benefit > 0) {
-          if (this.drugs[i].name != "Magic Pill") {
-            this.drugs[i].benefit = this.drugs[i].benefit - 1;
-          }
-        }
-      } else {
-        if (this.drugs[i].benefit < 50) {
-          this.drugs[i].benefit = this.drugs[i].benefit + 1;
-          if (this.drugs[i].name == "Fervex") {
-            if (this.drugs[i].expiresIn < 11) {
-              if (this.drugs[i].benefit < 50) {
-                this.drugs[i].benefit = this.drugs[i].benefit + 1;
-              }
-            }
-            if (this.drugs[i].expiresIn < 6) {
-              if (this.drugs[i].benefit < 50) {
-                this.drugs[i].benefit = this.drugs[i].benefit + 1;
-              }
-            }
-          }
-        }
+  updateBenefitValue(): Drug[] {
+    for (const drug of this.drugs) {
+      switch(drug.name) {
+        case "Herbal Tea":
+          this.updateHerbalTea(drug)
+          break;
+        case "Magic Pill":
+          // "Magic Pill" never expires nor decreases in Benefit.
+          break;
+        case "Fervex": 
+          this.updateFervex(drug)
+          break;
+         case "Dafalgan": 
+          this.updateDafalgan(drug)
+          break;
+        default:
+          this.updateDefaultDrug(drug)
       }
-      if (this.drugs[i].name != "Magic Pill") {
-        this.drugs[i].expiresIn = this.drugs[i].expiresIn - 1;
-      }
-      if (this.drugs[i].expiresIn < 0) {
-        if (this.drugs[i].name != "Herbal Tea") {
-          if (this.drugs[i].name != "Fervex") {
-            if (this.drugs[i].benefit > 0) {
-              if (this.drugs[i].name != "Magic Pill") {
-                this.drugs[i].benefit = this.drugs[i].benefit - 1;
-              }
-            }
-          } else {
-            this.drugs[i].benefit =
-              this.drugs[i].benefit - this.drugs[i].benefit;
-          }
-        } else {
-          if (this.drugs[i].benefit < 50) {
-            this.drugs[i].benefit = this.drugs[i].benefit + 1;
-          }
-        }
+
+      if(drug.benefit < 0) {
+        drug.benefit = 0
+      } else if(drug.benefit > 50) {
+        drug.benefit = 50
       }
     }
 
-    return this.drugs;
+    return this.drugs
   }
+
+  updateDefaultDrug(drug: Drug): void {
+    drug.expiresIn--
+    drug.benefit--
+    if(drug.hasExpired()) {
+      drug.benefit--
+    }
+  }
+
+  /** "Herbal Tea" actually increases in Benefit the older it gets. Benefit increases twice as fast after the expiration date. */
+  updateHerbalTea(drug: Drug): void {
+    drug.expiresIn--
+    drug.benefit++
+    if(drug.hasExpired()) {
+      drug.benefit++
+    }
+  }
+
+  /** "Fervex", like Herbal Tea, increases in Benefit as its expiration date approaches.
+   * Benefit increases by 2 when there are 10 days or less and by 3 when there are 5 days or less.
+   * Benefit drops to 0 after the expiration date */
+  updateFervex(drug: Drug): void {
+    drug.expiresIn--
+    drug.benefit++
+    if(drug.expiresIn < 10)
+      drug.benefit++
+    if(drug.expiresIn < 5)
+      drug.benefit++
+
+    if(drug.hasExpired()) {
+      drug.benefit = 0
+    }
+  }
+
+  /** "Dafalgan" degrades in Benefit twice as fast as normal drugs. */
+  updateDafalgan(drug: Drug) : void {
+    drug.expiresIn--
+    drug.benefit = drug.benefit-2
+    if(drug.hasExpired()) {
+      drug.benefit = drug.benefit-2
+    }
+  }
+
 }

@@ -69,4 +69,16 @@ describe("Pharmacy", () => {
       [new Drug("Fervex", -1, 0)],
     );
   })
+
+  //"Dafalgan" degrades in Benefit twice as fast as normal drugs.
+  it("should degrades the benefit twice", () => {
+    expect(new Pharmacy([new Drug("Dafalgan", 2, 3)]).updateBenefitValue()).toEqual(
+      [new Drug("Dafalgan", 1, 1)],
+    );
+  });
+  it("should degrades benefit for times as fast when expiresIn under zero", () => {
+    expect(new Pharmacy([new Drug("Dafalgan", 0, 7)]).updateBenefitValue()).toEqual(
+      [new Drug("Dafalgan", -1, 3)],
+    );
+  })
 });
